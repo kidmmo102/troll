@@ -1,38 +1,139 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TROLL MODE MAX 🤯</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      overflow: hidden;
-      text-align: center;
-    }
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Troll Demo V3</title>
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #ff0;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    height: 100vh;
+  }
+  h1 { color: #00aa00; margin-bottom: 12px; }
+  button {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+  }
+  #startBtn { background: cyan; color: magenta; }
+  .popup {
+    position: fixed;
+    padding: 15px 25px;
+    border-radius: 10px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0,0,0,.3);
+    animation: boom .2s ease;
+    z-index: 9999;
+  }
+  @keyframes boom {
+    from { transform: scale(0); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+</style>
+</head>
+<body>
+  <h1>⚡ Web Troll Demo V3 ⚡</h1>
+  <div>
+    <button id="startBtn">START 🤪</button>
+  </div>
 
-    h1 {
-      font-size: 36px;
-      color: #ff0;
-      margin-bottom: 20px;
-      text-shadow: 0 0 10px #f00, 0 0 20px #0f0, 0 0 30px #00f;
-    }
+<script>
+const uglyColors = ["#ff0000","#00ff00","#0000ff","#ffff00",
+                    "#ff00ff","#00ffff","#ff8800","#8800ff"];
+let running = false;
+let intervalId = null;
+let autoStopTimer = null;
+const created = [];
 
-    button {
-      padding: 15px 30px;
-      font-size: 20px;
-      border: none;
-      border-radius: 50px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: all 0.2s;
-      box-shadow: 0 5px 15px rgba(0,0,0);
+function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+
+function spawnPopup() {
+  if (!running) return;
+  const popup = document.createElement('div');
+  popup.className = 'popup';
+  popup.style.background = uglyColors[randInt(0,uglyColors.length-1)];
+  popup.style.color = uglyColors[randInt(0,uglyColors.length-1)];
+  popup.style.left = randInt(0,window.innerWidth-200)+"px";
+  popup.style.top  = randInt(0,window.innerHeight-100)+"px";
+
+  // 5% cơ hội tạo popup có STOP
+  if (Math.random() < 0.05) {
+    const btn = document.createElement("button");
+    btn.textContent = "STOP ❌";
+    btn.style.background = "red";
+    btn.style.color = "white";
+    btn.onclick = stopEffect;
+    popup.appendChild(btn);
+
+    // STOP popup tự biến mất sau 3 giây nếu không bấm
+    setTimeout(() => {
+      if (popup.parentNode) popup.remove();
+      const idx = created.indexOf(popup);
+      if (idx !== -1) created.splice(idx,1);
+    }, 3000);
+  } else {
+    popup.textContent = "NGuuuuuu 🌈";
+  }
+
+  document.body.appendChild(popup);
+  created.push(popup);
+}
+
+function startEffect(){
+  if(running) return;
+  running = true;
+  document.getElementById("startBtn").disabled = true;
+
+  // Lưu trạng thái vào localStorage
+  localStorage.setItem("trollRunning","true");
+  localStorage.setItem("trollStartTime", Date.now());
+
+  intervalId = setInterval(spawnPopup, 40); // cực nhanh và dày đặc
+  autoStopTimer = setTimeout(stopEffect, 5*60*1000);
+}
+
+function stopEffect(){
+  running = false;
+  document.getElementById("startBtn").disabled = false;
+  clearInterval(intervalId);
+  clearTimeout(autoStopTimer);
+  created.forEach(p=>p.remove());
+  created.length = 0;
+
+  // Xóa trạng thái lưu
+  localStorage.removeItem("trollRunning");
+  localStorage.removeItem("trollStartTime");
+}
+
+// Khi tải lại trang, kiểm tra nếu trước đó đang chạy thì tiếp tục
+window.onload = () => {
+  if(localStorage.getItem("trollRunning") === "true"){
+    const startTime = parseInt(localStorage.getItem("trollStartTime"),10) || Date.now();
+    const elapsed = Date.now() - startTime;
+    if(elapsed < 5*60*1000){
+      // còn trong 5 phút thì tiếp tục chạy
+      startEffect();
+      // set lại timer cho phần còn lại
+      clearTimeout(autoStopTimer);
+      autoStopTimer = setTimeout(stopEffect, 5*60*1000 - elapsed);
+    } else {
+      // đã quá 5 phút thì reset
+      stopEffect();
     }
+  }
+};
+
+document.getElementById("startBtn").onclick = startEffect;
+</script>
+</body>
+</html>
